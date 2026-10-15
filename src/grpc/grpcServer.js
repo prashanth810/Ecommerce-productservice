@@ -23,6 +23,7 @@ const isAllowed = (call) => {
     return Boolean(key && key === Envs.INTERNAL_GRPC_KEY);
 };
 
+// ---------- GetProductById ----------
 const GetProductById = async (call, callback) => {
     if (!isAllowed(call)) {
         return callback({ code: grpc.status.UNAUTHENTICATED, message: "Not allowed" });
@@ -60,11 +61,92 @@ const GetProductById = async (call, callback) => {
             is_active: product.is_active !== false,
         };
 
-        return callback(null, {
-            success: true,
-            message: "Product found",
-            data,
-        });
+        return callback(null, { success: true, message: "Product found", data });
+    } catch (error) {
+        return callback({ code: grpc.status.INTERNAL, message: error.message });
+    }
+};
+
+// ---------- ReduceStock ----------
+// Atomically decrements stock for a specific variant by quantity.
+// Uses $inc with a negative value so it is safe under concurrent orders.
+// Will NOT reduce below 0 — the $gte guard in the filter prevents it.
+const ReduceStock = async (call, callback) => {
+    if (!isAllowed(call)) {
+        return callback({ code: grpc.status.UNAUTHENTICATED, message: "Not allowed" });
+    }
+
+    try {
+        const { productId, weight, quantity } = call.request;
+        const qty = Number(quantity);
+
+        if (!mongoose.isValidObjectId(productId) || !weight || !(qty > 0)) {
+            return callback(null, { success: false, message: "Invalid request" });
+        }
+
+        // Only decrement if the variant has enough stock (atomic check + update)
+        const result = await ProductModel.updateOne(
+            {
+                _id: productId,
+                variants: {
+                    $elemMatch: {
+                        weight,
+                        stock: { $gte: qty },
+                        stock_quantity: { $gte: qty },
+                    },
+                },
+            },
+            {
+                $inc: {
+                    "variants.$[v].stock": -qty,
+                    "variants.$[v].stock_quantity": -qty,
+                },
+            },
+            { arrayFilters: [{ "v.weight": weight }] }
+        );
+
+        if (result.modifiedCount === 0) {
+            return callback(null, { success: false, message: "Insufficient stock or product not found" });
+        }
+
+        return callback(null, { success: true, message: "Stock reduced" });
+    } catch (error) {
+        return callback({ code: grpc.status.INTERNAL, message: error.message });
+    }
+};
+
+// ---------- RestoreStock ----------
+// Atomically increments stock for a specific variant by quantity.
+// Called when an order is cancelled or COD payment fails.
+const RestoreStock = async (call, callback) => {
+    if (!isAllowed(call)) {
+        return callback({ code: grpc.status.UNAUTHENTICATED, message: "Not allowed" });
+    }
+
+    try {
+        const { productId, weight, quantity } = call.request;
+        const qty = Number(quantity);
+
+        if (!mongoose.isValidObjectId(productId) || !weight || !(qty > 0)) {
+            return callback(null, { success: false, message: "Invalid request" });
+        }
+
+        const result = await ProductModel.updateOne(
+            { _id: productId, "variants.weight": weight },
+            {
+                $inc: {
+                    "variants.$[v].stock": qty,
+                    "variants.$[v].stock_quantity": qty,
+                },
+            },
+            { arrayFilters: [{ "v.weight": weight }] }
+        );
+
+        if (result.modifiedCount === 0) {
+            return callback(null, { success: false, message: "Product / variant not found" });
+        }
+
+        return callback(null, { success: true, message: "Stock restored" });
     } catch (error) {
         return callback({ code: grpc.status.INTERNAL, message: error.message });
     }
@@ -72,7 +154,11 @@ const GetProductById = async (call, callback) => {
 
 const startGrpcServer = () => {
     const server = new grpc.Server();
-    server.addService(productProto.ProductService.service, { GetProductById });
+    server.addService(productProto.ProductService.service, {
+        GetProductById,
+        ReduceStock,
+        RestoreStock,
+    });
 
     server.bindAsync(`0.0.0.0:${Envs.GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (error) => {
         if (error) {
