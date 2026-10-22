@@ -12,7 +12,7 @@ const Envs = {
     CLOUDINARY_API_KEY: env.CLOUDINARY_API_KEY,
     CLOUDINARY_API_SECRET: env.CLOUDINARY_API_SECRET,
     GRPC_PORT: env.GRPC_PORT || 3001,
-    INTERNAL_GRPC_KEY: env.INTERNAL_GRPC_KEY || "ecommerce_grpc_internal_secret_key_2026",
+    INTERNAL_GRPC_KEY: env.INTERNAL_GRPC_KEY,
 }
 
 export default Envs;
