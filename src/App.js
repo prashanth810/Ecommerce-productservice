@@ -6,6 +6,7 @@ import Categoryroute from "./routes/Categoryroutes.js";
 import Productroute from "./routes/Productroutes.js";
 import Envs from "./utils/Envs.js";
 import startGrpcServer from "./grpc/grpcServer.js";
+import Feedbackroute from "./routes/Feedbackreviewroute.js";
 
 const PORT = Envs.PORT;
 
@@ -23,6 +24,7 @@ app.get("/product", (req, res) => {
 // connections routes for product and category
 app.use("/api/auth/v2", Categoryroute);
 app.use('/api/auth/v2', Productroute);
+app.use('/api/auth/v2', Feedbackroute);
 
 ConnectionDB().then(() => {
     app.listen(PORT, () => {
