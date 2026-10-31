@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import ProductModel from "../models/ProductModel.js";
-import FeedbackModel from "../models/FeedbackModel.js";
+import FeedbackModel from "../models/Feedbackmodel.js";
 
 const badId = (id) => !mongoose.isValidObjectId(id);
 const getUserId = (req) => String(req?.user?.id || req?.user?._id || "");
