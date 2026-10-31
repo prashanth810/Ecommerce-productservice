@@ -196,6 +196,27 @@ const GetMyProductFeedback = async (req, res) => {
     }
 };
 
+// get all feedbacks 
+const getallfeedbacks = async (req, res) => {
+    try {
+        const feedback = await FeedbackModel.find({})
+            .sort({ createdAt: -1 })
+            .limit(10);
+
+        return res.status(200).json({
+            success: true,
+            message: "Feedback fetched successfully !!!",
+            count: feedback.length,
+            data: feedback
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 // ---------- READ: one feedback ----------
 const GetSingleFeedback = async (req, res) => {
     const { id } = req.params;
@@ -298,4 +319,4 @@ const DeleteFeedback = async (req, res) => {
     }
 };
 
-export { AddFeedback, GetProductFeedback, GetMyProductFeedback, GetSingleFeedback, UpdateFeedback, DeleteFeedback };
+export { AddFeedback, GetProductFeedback, GetMyProductFeedback, GetSingleFeedback, UpdateFeedback, DeleteFeedback, getallfeedbacks };

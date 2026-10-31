@@ -4,6 +4,7 @@ import Ratelimit from "../middlewares/Ratelimit.js";
 import {
     AddFeedback, GetProductFeedback, GetMyProductFeedback,
     GetSingleFeedback, UpdateFeedback, DeleteFeedback,
+    getallfeedbacks,
 } from "../controllers/Feedbackcontroller.js";
 
 const Feedbackroute = express.Router();
@@ -25,5 +26,7 @@ Feedbackroute.get("/product/:productId/feedback", limit(40), GetProductFeedback)
 Feedbackroute.get("/feedback/:id", limit(40), GetSingleFeedback);
 Feedbackroute.put("/feedback/:id", limit(10), Authmiddleware, UpdateFeedback);
 Feedbackroute.delete("/feedback/:id", limit(10), Authmiddleware, DeleteFeedback);
+
+Feedbackroute.get("/feedback/all", limit(50), getallfeedbacks);
 
 export default Feedbackroute;
