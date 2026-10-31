@@ -18,7 +18,7 @@ app.use(morgen("dev"));
 
 app.use(cors());
 
-app.get("/product", (req, res) => {
+app.get("/", (req, res) => {
     return res.status(200).json({ success: true, message: "Product backend started !!!" });
 });
 
