@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import ProductModel from "../models/ProductModel.js";
 import FeedbackModel from "../models/Feedbackmodel.js";
 
 const badId = (id) => !mongoose.isValidObjectId(id);
