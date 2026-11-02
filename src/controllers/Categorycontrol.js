@@ -1,4 +1,4 @@
-import { uploadToCloudinary } from "../config/Cloudinary.js";
+import { uploadToCloudinary, cloudinary } from "../config/Cloudinary.js";
 import CategoryModel from "../models/CategoryModel.js";
 
 // create category only admin 

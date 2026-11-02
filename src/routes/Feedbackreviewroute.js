@@ -22,11 +22,12 @@ Feedbackroute.get("/product/:productId/feedback/me", limit(30), Authmiddleware, 
 // all feedback of the product + rating summary  (public)  ?page=1&limit=10&sort=latest|oldest|highest|lowest&rating=1-5
 Feedbackroute.get("/product/:productId/feedback", limit(40), GetProductFeedback);
 
+// all feedbacks (latest 10)  keep above "/feedback/:id" or "all" is read as an id
+Feedbackroute.get("/feedback/all", limit(50), getallfeedbacks);
+
 // ---- one feedback ----
 Feedbackroute.get("/feedback/:id", limit(40), GetSingleFeedback);
 Feedbackroute.put("/feedback/:id", limit(10), Authmiddleware, UpdateFeedback);
 Feedbackroute.delete("/feedback/:id", limit(10), Authmiddleware, DeleteFeedback);
-
-Feedbackroute.get("/feedback/all", limit(50), getallfeedbacks);
 
 export default Feedbackroute;
